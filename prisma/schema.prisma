@@ -1,0 +1,161 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+enum Role {
+  USER
+  VOLUNTEER
+  ADMIN
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(USER)
+  phone     String?
+  createdAt DateTime @default(now())
+
+  registrations EventRegistration[]
+
+  applications  VolunteerApplication[]
+orders        Order[]
+adminReports  Report[]  @relation("AdminReports")
+submissions   EventFormSubmission[]
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  location    String
+  category    String
+  date        DateTime
+  status      String
+  createdAt   DateTime @default(now())
+
+  images        EventImage[]
+  registrations EventRegistration[]
+  form          EventForm?
+}
+
+model EventImage {
+  id       String @id @default(uuid())
+  imageUrl String
+
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model EventRegistration {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  userId  String
+  eventId String
+
+  user  User  @relation(fields: [userId], references: [id])
+  event Event @relation(fields: [eventId], references: [id])
+}
+model VolunteerApplication {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  phone     String
+  city      String?
+  skills    String[]
+  reason    String
+  status    String   @default("Pending")
+  createdAt DateTime @default(now())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model Donation {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  amount    Float
+  method    String?
+  message   String?
+  paymentId String?
+  createdAt DateTime @default(now())
+}
+
+model Order {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  phone     String
+  address   String
+  city      String
+  state     String
+  pincode   String
+  total     Float
+  paymentId String?
+  items     Json
+  createdAt DateTime @default(now())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model Report {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  category    String
+  date        DateTime
+  images      String[]
+  createdAt   DateTime @default(now())
+  adminId     String
+  admin       User     @relation("AdminReports", fields: [adminId], references: [id])
+}
+model EventForm {
+  id          String   @id @default(uuid())
+  eventId     String   @unique
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  fields      Json
+  amount      Float    @default(0)
+  upiQrImage  String?
+  upiId       String?
+  createdAt   DateTime @default(now())
+  submissions EventFormSubmission[]
+}
+
+model EventFormSubmission {
+  id            String   @id @default(uuid())
+  formId        String
+  form          EventForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+  responses     Json
+  paymentProof  String?
+  status        String   @default("Pending")
+  ticketCode    String   @unique
+  createdAt     DateTime @default(now())
+}
+model Product {
+  id            String   @id @default(uuid())
+  name          String
+  artist        String
+  tribe         String
+  price         Float
+  originalPrice Float?
+  category      String
+  badge         String?
+  emoji         String
+  description   String
+  inStock       Boolean  @default(true)
+  createdAt     DateTime @default(now())
+}
