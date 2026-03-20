@@ -11,7 +11,10 @@ const donationRoutes = require("./routes/donation.routes");
 const orderRoutes = require("./routes/order.routes");
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: ["https://glittering-centaur-847272.netlify.app", "http://localhost:5173"],
+  credentials: true
+}));
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
